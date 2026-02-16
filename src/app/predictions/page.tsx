@@ -7,21 +7,13 @@ import { usePMData } from '@/features/predictions/hooks/usePMData';
 
 export default function PredictionsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { refreshAll, loading, error } = usePMData({ enabled: true });
+  const { refreshAll, loading } = usePMData({ enabled: true });
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await refreshAll();
     setTimeout(() => setIsRefreshing(false), 500);
   }, [refreshAll]);
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-danger">
-        <p>Error loading prediction markets: {error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-bgPrimary min-h-screen">

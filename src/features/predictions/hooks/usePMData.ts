@@ -15,7 +15,8 @@ interface UsePMDataOptions {
  */
 export function usePMData(options: UsePMDataOptions = {}) {
   const { enabled = true, refreshInterval = 30000 } = options;
-  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+  // Always use mock data for now
+  const useMockData = true; // process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
   
   const {
     sections,
@@ -28,34 +29,34 @@ export function usePMData(options: UsePMDataOptions = {}) {
   } = usePMStore();
 
   const fetchTrending = useCallback(async () => {
+    setLoading('trending', true);
     try {
-      setLoading('trending', true);
-      
       if (useMockData) {
         // Use mock data
         const mockData = generateMockPredictionMarkets();
-        setTimeout(() => {
-          setMarkets('trending', mockData.trending);
-        }, 300); // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
+        setMarkets('trending', mockData.trending);
+        setLoading('trending', false);
       } else {
         const markets = await getTrendingMarkets('24h', selectedCategory || undefined, 50);
         setMarkets('trending', markets);
+        setLoading('trending', false);
       }
     } catch (err) {
+      setLoading('trending', false);
       setError('trending', err instanceof Error ? err.message : 'Failed to fetch trending');
     }
   }, [selectedCategory, setLoading, setMarkets, setError, useMockData]);
 
   const fetchNew = useCallback(async () => {
+    setLoading('new', true);
     try {
-      setLoading('new', true);
-      
       if (useMockData) {
         // Use mock data
         const mockData = generateMockPredictionMarkets();
-        setTimeout(() => {
-          setMarkets('new', mockData.new);
-        }, 300); // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
+        setMarkets('new', mockData.new);
+        setLoading('new', false);
       } else {
         const response = await searchMarkets({
           status: 'active',
@@ -69,22 +70,23 @@ export function usePMData(options: UsePMDataOptions = {}) {
           return dateB - dateA;
         });
         setMarkets('new', sorted);
+        setLoading('new', false);
       }
     } catch (err) {
+      setLoading('new', false);
       setError('new', err instanceof Error ? err.message : 'Failed to fetch new markets');
     }
   }, [selectedCategory, setLoading, setMarkets, setError, useMockData]);
 
   const fetchClosing = useCallback(async () => {
+    setLoading('closing', true);
     try {
-      setLoading('closing', true);
-      
       if (useMockData) {
         // Use mock data
         const mockData = generateMockPredictionMarkets();
-        setTimeout(() => {
-          setMarkets('closing', mockData.closing);
-        }, 300); // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
+        setMarkets('closing', mockData.closing);
+        setLoading('closing', false);
       } else {
         const response = await searchMarkets({
           status: 'active',
@@ -100,8 +102,10 @@ export function usePMData(options: UsePMDataOptions = {}) {
             return dateA - dateB;
           });
         setMarkets('closing', sorted);
+        setLoading('closing', false);
       }
     } catch (err) {
+      setLoading('closing', false);
       setError('closing', err instanceof Error ? err.message : 'Failed to fetch closing markets');
     }
   }, [selectedCategory, setLoading, setMarkets, setError, useMockData]);
