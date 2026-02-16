@@ -9,6 +9,7 @@ import { getMarketDetails, getMarketPrices, getMarketTrades, getMarketOHLCV } fr
 import type { PMMarket, PMTrade, PMOutcome } from '@/features/predictions/types';
 import { Separator } from '@/components/ui/separator';
 import { OrderBookPanel } from '@/features/predictions/components/OrderBookPanel';
+import { generateMockMarketDetail } from '@/lib/mockData';
 
 // ============================================================================
 // Utilities
@@ -397,22 +398,14 @@ export default function MarketDetailPage() {
   const fetchMarket = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMarketDetails(platform, marketId);
-      setMarket(data);
+      
+      // Use mock data instead of API
+      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
+      const mockData = generateMockMarketDetail(platform, marketId);
+      
+      setMarket(mockData.market);
+      setOhlcvData(mockData.ohlcvData);
       setError(null);
-      
-      const yesOutcome = data.outcomes?.find((o: PMOutcome) => o.label.toLowerCase() === 'yes');
-      
-      if (yesOutcome) {
-        try {
-          const ohlcv = await getMarketOHLCV(platform, marketId, yesOutcome.id, '5m', 200);
-          if (ohlcv && ohlcv.length > 0) {
-            setOhlcvData(ohlcv);
-          }
-        } catch (ohlcvErr) {
-          console.error('Failed to load OHLCV data:', ohlcvErr);
-        }
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load market');
     } finally {
@@ -422,8 +415,10 @@ export default function MarketDetailPage() {
 
   const fetchTrades = useCallback(async () => {
     try {
-      const data = await getMarketTrades(platform, marketId, undefined, 50);
-      setTrades(data);
+      // Use mock data instead of API
+      await new Promise(resolve => setTimeout(resolve, 100)); // Simulate network delay
+      const mockData = generateMockMarketDetail(platform, marketId);
+      setTrades(mockData.trades);
     } catch (err) {
       console.error('Failed to fetch trades:', err);
     }
@@ -432,28 +427,20 @@ export default function MarketDetailPage() {
   const refreshPrices = useCallback(async () => {
     if (!market) return;
     try {
-      // Refresh outcome prices for display
-      const priceData = await getMarketPrices(platform, marketId);
-      if (market.outcomes && priceData?.outcomes) {
-        const updatedOutcomes = market.outcomes.map((outcome: PMOutcome) => {
-          const outcomePrice = priceData.outcomes[outcome.id];
-          return outcomePrice ? { ...outcome, price: outcomePrice.price } : outcome;
-        });
-        setMarket({ ...market, outcomes: updatedOutcomes });
-      }
+      // Use mock data instead of API - simulate price changes
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Refresh OHLCV chart data from trades (not orderbook)
-      const yesOutcome = market.outcomes?.find((o: PMOutcome) => o.label.toLowerCase() === 'yes');
-      if (yesOutcome) {
-        try {
-          const ohlcv = await getMarketOHLCV(platform, marketId, yesOutcome.id, '5m', 200);
-          if (ohlcv && ohlcv.length > 0) {
-            setOhlcvData(ohlcv);
-          }
-        } catch (ohlcvErr) {
-          console.error('Failed to refresh OHLCV data:', ohlcvErr);
-        }
-      }
+      // Generate slight random price variations
+      const updatedOutcomes = market.outcomes?.map((outcome: PMOutcome) => ({
+        ...outcome,
+        price: Math.max(0.01, Math.min(0.99, outcome.price + (Math.random() - 0.5) * 0.02))
+      }));
+      
+      setMarket({ ...market, outcomes: updatedOutcomes });
+      
+      // Refresh OHLCV with new data point
+      const mockData = generateMockMarketDetail(platform, marketId);
+      setOhlcvData(mockData.ohlcvData);
     } catch (err) {
       console.error('Failed to refresh prices:', err);
     }

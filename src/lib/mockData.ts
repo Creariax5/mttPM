@@ -245,6 +245,50 @@ export const mockPMCategories: PMCategory[] = categories.map((name, i) => ({
   volumeTotal: 1000000 + Math.random() * 5000000,
 }));
 
+// Generate mock market detail with OHLCV and trades
+export const generateMockMarketDetail = (platform: string, marketId: string) => {
+  const market = generateMockMarket(parseInt(marketId.split('-')[0]) || 0, 'trending');
+  
+  // Override with provided platform and marketId
+  market.platform = platform;
+  market.marketId = marketId;
+  
+  // Generate OHLCV data (200 5-minute candles)
+  const now = Date.now();
+  const ohlcvData = Array.from({ length: 200 }, (_, i) => {
+    const basePrice = 0.5 + (Math.random() - 0.5) * 0.3;
+    const volatility = 0.02;
+    return {
+      time: now - (200 - i) * 5 * 60 * 1000,
+      open: Math.max(0.01, Math.min(0.99, basePrice + (Math.random() - 0.5) * volatility)),
+      high: Math.max(0.01, Math.min(0.99, basePrice + Math.random() * volatility)),
+      low: Math.max(0.01, Math.min(0.99, basePrice - Math.random() * volatility)),
+      close: Math.max(0.01, Math.min(0.99, basePrice + (Math.random() - 0.5) * volatility)),
+    };
+  });
+  
+  // Generate trades
+  const trades = Array.from({ length: 50 }, (_, i) => ({
+    tradeId: `trade-${i}`,
+    txHash: `0x${Math.random().toString(16).slice(2, 66)}`,
+    outcomeId: i % 2 === 0 ? 'yes' : 'no',
+    outcomeLabel: i % 2 === 0 ? 'Yes' : 'No',
+    side: (Math.random() > 0.5 ? 'buy' : 'sell') as 'buy' | 'sell',
+    price: 0.3 + Math.random() * 0.4,
+    size: Math.floor(10 + Math.random() * 500),
+    amountUSD: 10 + Math.random() * 1000,
+    maker: `0x${Math.random().toString(16).slice(2, 42)}`,
+    taker: `0x${Math.random().toString(16).slice(2, 42)}`,
+    timestamp: new Date(now - i * 60000).toISOString(),
+  }));
+  
+  return {
+    market,
+    ohlcvData,
+    trades,
+  };
+};
+
 // Export mock data as default
 export default {
   pulse: generateMockPulseData(),
